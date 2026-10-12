@@ -1,0 +1,57 @@
+{
+  "miniprogramRoot": "miniprogram/",
+  "compileType": "miniprogram",
+  "libVersion": "3.17.4",
+  "appid": "wx9058143ed14625f9",
+  "projectname": "pindou-miniapp",
+  "minified": true,
+  "es6": true,
+  "enhance": true,
+  "postcss": true,
+  "minifyWXSS": true,
+  "minifyWXML": true,
+  "minifyJS": true,
+  "packNpmManually": false,
+  "packNpmRelationList": [],
+  "setting": {
+    "urlCheck": false,
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "preloadBackgroundData": false,
+    "minified": true,
+    "newFeature": true,
+    "coverView": true,
+    "nodeModules": false,
+    "autoAudits": false,
+    "showShadowRootInWxmlPanel": true,
+    "scopeDataCheck": false,
+    "uglifyFileName": false,
+    "checkInvalidKey": true,
+    "checkSiteMap": true,
+    "uploadWithSourceMap": true,
+    "compileHotReLoad": false,
+    "useMultiFrameRuntime": true,
+    "useApiHook": true,
+    "useApiHostProcess": true,
+    "enableEngineNative": false,
+    "bundle": false,
+    "useCompilerPlugins": false,
+    "ignoreUploadUnusedFiles": false,
+    "bigPackageSizeSupport": false
+  },
+  "condition": {
+    "miniprogram": {
+      "list": [
+        {
+          "name": "首页",
+          "pathName": "pages/index/index",
+          "query": "",
+          "scene": null
+        }
+      ]
+    }
+  },
+  "isGameTourist": false,
+  "simulatorPluginLibVersion": {}
+}

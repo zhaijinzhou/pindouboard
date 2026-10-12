@@ -1,0 +1,122 @@
+/* pages/index/index.wxss */
+
+/*
+ * 隐私提示条的换行修复已上移到 app.wxss 的 `.privacy-note .note-text`
+ * （统一治理四处使用点）。此前这里有一条 `.privacy-note text { flex: 1 }`，
+ * 用的是标签选择器：既漏掉了 min-width:0 导致文字堆到屏幕右侧，
+ * 又会被页面上任何 text 误命中，已删除。
+ */
+
+/* ============ Hero ============ */
+/*
+ * 高度构成（原 288rpx → 现 172rpx）：
+ *   padding 80+60=140rpx  → 48+36=84rpx
+ *   icon 120+28=148rpx     → 84+16=100rpx
+ *   title 46+16=62rpx      → 40+10=50rpx
+ *   hero-sub 保持不变（它是信息载体，不能压）
+ * 首屏要留给选图按钮，hero 只做「一句话说明」，压到刚好够用即可。
+ */
+.hero {
+  padding: 48rpx 20rpx 36rpx;
+  text-align: center;
+}
+.hero-icon {
+  font-size: 84rpx;
+  line-height: 1;
+  margin-bottom: 16rpx;
+}
+.hero-title {
+  font-size: 40rpx;
+  font-weight: 700;
+  letter-spacing: -0.5rpx;
+  margin-bottom: 10rpx;
+}
+.hero-sub {
+  font-size: 25rpx;
+  color: var(--c-text-3);
+  line-height: 1.6;
+  padding: 0 24rpx;
+}
+
+/* ============ 选图按钮 ============ */
+.pick-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 180rpx;
+  border-radius: 20rpx;
+  background: var(--c-brand-soft);
+  margin-bottom: 24rpx;
+  transition: transform 0.1s, opacity 0.15s;
+}
+.pick-btn:last-child {
+  margin-bottom: 0;
+  background: #f3f4f6;
+}
+.pick-btn:active {
+  transform: scale(0.985);
+  opacity: 0.9;
+}
+.pick-icon {
+  font-size: 56rpx;
+  margin-right: 20rpx;
+}
+.pick-text {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: var(--c-brand);
+}
+.pick-btn:last-child .pick-text {
+  color: var(--c-text-2);
+}
+
+/* ============ 步骤说明 ============ */
+.step {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 24rpx;
+}
+.step:last-child {
+  margin-bottom: 0;
+}
+.step-num {
+  flex-shrink: 0;
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: var(--c-brand-soft);
+  color: var(--c-brand);
+  font-size: 22rpx;
+  font-weight: 700;
+  text-align: center;
+  line-height: 40rpx;
+  margin-right: 20rpx;
+}
+.step-text {
+  flex: 1;
+  /* 长说明必须能收缩换行，否则 min-width:auto 的下限会把文字顶出容器 */
+  min-width: 0;
+  font-size: 27rpx;
+  color: var(--c-text-2);
+  line-height: 1.6;
+  word-break: break-all;
+}
+
+/* ============ 预检卡片 ============ */
+/*
+ * 卡片只作为取景框的外层容器，边距/内边距压到最小，
+ * 让取景台尽量占满卡片宽度（取景框自身已有 aspectFit 与遮罩）。
+ */
+.preview-card {
+  padding: 20rpx;
+}
+
+/* ============ 入口 ============ */
+.entry-row {
+  margin-top: 40rpx;
+  text-align: center;
+}
+.entry-link {
+  font-size: 26rpx;
+  color: var(--c-text-3);
+}

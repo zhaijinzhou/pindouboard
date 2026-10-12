@@ -1,0 +1,97 @@
+/* components/magnifier/magnifier.wxss */
+
+/*
+ * 触摸层：绝对定位覆盖在原画布之上，尺寸由 layout 决定（wxml 内联）。
+ * ⚠️ 必须是 absolute —— 它与 canvas 同处 .canvas-stage 内，
+ *    若参与文档流会把画布挤到下一行。
+ * ⚠️ 未放大时完全透明（无背景），用户看不出这层存在，
+ *    只有长按后才会出现放大视窗。
+ */
+.mg-source {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 20;
+}
+
+/*
+ * 放大态：触摸层扩展到全屏。
+ * 手指滑出原画布范围后仍要能收到 touchmove，否则图纸会从指下滑走。
+ * fixed 定位脱离 .canvas-stage 的 overflow 约束。
+ */
+.mg-source-full {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 200;
+}
+
+/*
+ * 放大罩层：覆盖整个视口。
+ * 半透明遮罩让用户仍能感知自己压在哪张图纸上，
+ * 不会迷失方向 —— 这点比「纯黑背景」体验好得多。
+ */
+.mg-overlay {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 200;
+  background: rgba(20, 24, 40, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mg-window {
+  position: relative;
+  background: #ffffff;
+  border-radius: 16rpx;
+  overflow: hidden;
+  box-shadow: 0 12rpx 48rpx rgba(0, 0, 0, 0.4);
+}
+
+.mg-canvas {
+  display: block;
+}
+
+/*
+ * 预渲染底图的承载节点。
+ * 移出视口但保留在渲染树中 —— display:none 取不到 node，
+ * left:-9999px 才能让 createSelectorQuery 拿到并绘制。
+ */
+.mg-bitmap {
+  position: fixed;
+  left: -9999px;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+/* 底部信息条：显示当前格坐标与色号 */
+.mg-bar {
+  position: absolute;
+  left: 40rpx;
+  right: 40rpx;
+  bottom: 72rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.mg-bar-text {
+  font-size: 26rpx;
+  color: #ffffff;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 10rpx 24rpx;
+  border-radius: 999rpx;
+}
+.mg-bar-hint {
+  font-size: 21rpx;
+  color: rgba(255, 255, 255, 0.66);
+  margin-top: 12rpx;
+}

@@ -1,0 +1,53 @@
+<!-- components/magnifier/magnifier.wxml -->
+<!--
+  触摸层 .mg-source 覆盖在原画布之上（尺寸与画布一致），
+  由它接管长按手势；未进入放大态时完全透明、不改变视觉。
+
+  ⚠️ 手势冲突处理（移动端最容易踩的坑）：
+     1. 放大态下触摸层必须**扩展到全屏**并用 catchtouchmove。
+        若触摸层仍停留在原画布区域，手指滑出画布就收不到 touchmove，
+        页面会跟着滚，图纸从指下滑走。
+     2. 长按判定期间（300ms 内）若手指已移动超过阈值，
+        判定为页面滚动，取消长按 —— 不能和滚动抢手势。
+     3. 用 touchcancel 收尾：系统手势（如下拉通知栏）会中断触摸，
+        没有它会卡在「一直放大」的状态。
+-->
+<view wx:if="{{zooming}}"
+  class="mg-source mg-source-full"
+  catchtouchstart="onTouchStart"
+  catchtouchmove="onTouchMove"
+  catchtouchend="onTouchEnd"
+  catchtouchcancel="onTouchCancel">
+  <view class="mg-overlay">
+    <view class="mg-window"
+      style="width:{{winW}}px;height:{{winH}}px;">
+      <canvas type="2d" id="mgCanvas" class="mg-canvas"
+        style="width:{{winW}}px;height:{{winH}}px;" />
+    </view>
+
+    <view class="mg-bar">
+      <text class="mg-bar-text">{{focusCell || '移动手指查看细节'}}</text>
+      <text class="mg-bar-hint">松开手指退出放大</text>
+    </view>
+  </view>
+</view>
+
+<!--
+  未放大态：触摸层与画布同尺寸、透明。
+  用 bind（而非 catch）让长按判定期间的滚动仍能正常滚页面 ——
+  此时的 touchmove 会被 MOVE_TOLERANCE 判定为滚动而取消长按。
+-->
+<view wx:else
+  class="mg-source"
+  style="width:{{sourceW}}px;height:{{sourceH}}px;"
+  bindtouchstart="onTouchStart"
+  bindtouchmove="onTouchMove"
+  bindtouchend="onTouchEnd"
+  bindtouchcancel="onTouchCancel" />
+
+<!--
+  预渲染底图：整幅图纸的高清位图，只在放大态存在。
+  ⚠️ 必须用 left:-9999px 而不是 display:none ——
+     display:none 的节点取不到 node，底图就永远拿不到。
+-->
+<canvas wx:if="{{zooming}}" type="2d" id="mgBitmap" class="mg-bitmap" />

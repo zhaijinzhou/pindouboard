@@ -1,0 +1,255 @@
+<!-- pages/config/config.wxml -->
+<!--
+  注：成品指标卡（成品尺寸 / 格点阵 / 总格数）已于 v0.7 移至 editor 页
+  的图纸预览卡片内 —— 尺寸与格数必须对照真实图纸才有意义，
+  放在配置页既占空间又看不到图。本页只保留实时预览与参数。
+-->
+<view class="page">
+
+  <!--
+    颜色数上限上移到预览正上方（v0.9）：
+    这是对预览影响最直观的参数 —— 拖动滑块时颜色数当场增减，
+    必须与预览同屏才能形成「参数 → 效果」的即时反馈。
+    与其他控件一样使用标准 .card，间距由 .card 的 margin-bottom 统一，
+    不需要任何额外样式，也不会与其它块重叠。
+  -->
+  <!-- ============ 颜色数上限 ============ -->
+  <view class="card">
+    <view class="card-title">
+      <text>颜色数上限</text>
+      <text class="sub">{{params.colorLimit}} 色</text>
+    </view>
+    <slider class="slider" min="4" max="60" step="1" value="{{params.colorLimit}}"
+      activeColor="#ff5b7f" block-size="20" bindchange="onColorLimitChange"
+      bindchanging="onColorLimitChanging" />
+    <view class="hint">
+      颜色越多层次越丰富，但备料与拼接难度上升。20 色以内最适合手工施工。
+    </view>
+  </view>
+
+  <!-- ============ 实时图纸预览 ============ -->
+  <view class="card live-preview">
+    <view class="card-title">
+      <text>实时预览</text>
+      <text class="sub">{{previewBusy ? '计算中…' : ''}}</text>
+    </view>
+
+    <view class="lp-stage">
+      <view class="lp-stage-inner">
+        <canvas type="2d" id="previewCanvas"
+          class="lp-canvas"
+          style="width:{{canvasW}}px;height:{{canvasH}}px;" />
+      </view>
+      <view class="lp-mask" wx:if="{{!previewReady}}">
+        <text>正在准备预览…</text>
+      </view>
+    </view>
+
+    <!--
+      指标条：颜色数 / 留空占比 / 成品尺寸 会随参数实时变化，
+      是判断「参数到底生效没有」最可靠的信号 ——
+      缩略图上的细微色差肉眼常常看不出来，数字不会骗人。
+    -->
+    <view class="lp-stats">
+      <view class="lp-stat">
+        <text class="lp-stat-val">{{previewColors}}</text>
+        <text class="lp-stat-label">用到颜色</text>
+      </view>
+      <view class="lp-stat">
+        <text class="lp-stat-val">{{previewFill}}%</text>
+        <text class="lp-stat-label">实心格占比</text>
+      </view>
+      <view class="lp-stat">
+        <text class="lp-stat-val">{{preview.cols}}×{{preview.rows}}</text>
+        <text class="lp-stat-label">格点阵</text>
+      </view>
+    </view>
+
+    <view class="hint">
+      预览为缩略示意：配色与构图可信，纹理细节会比最终图纸简化。
+      {{previewTip || '调整任一参数即时刷新。'}}
+    </view>
+  </view>
+
+  <!--
+    进阶选项紧贴实时预览下方（v0.9）：
+    这些开关的影响在预览上一眼可见，参数与效果同屏才能「边调边看」。
+    原先它排在颜色数上限之后，离预览隔了四张卡，调参时几乎无法同步观察。
+  -->
+  <!-- ============ 进阶开关 ============ -->
+  <view class="card">
+    <view class="card-title">
+      <text>进阶选项</text>
+      <!--
+        ⚠️ v0.9 修复「展开/收起点了没反应」：
+        原先这里只是个纯文本，点了虽然触发了 toggleAdvanced，
+        但下面的面板内容**没有 wx:if 绑定 advancedOpen** ——
+        状态变了却没有任何东西跟着变，表现为完全无响应。
+        现改为真实按钮 + 条件渲染，并用箭头指示当前状态。
+      -->
+      <view class="fold-btn" bindtap="toggleAdvanced" hover-class="fold-btn-active">
+        <text class="fold-btn-text">{{advancedOpen ? '收起' : '展开'}}</text>
+        <text class="fold-arrow {{advancedOpen ? 'fold-arrow-open' : ''}}">▾</text>
+      </view>
+    </view>
+
+    <block wx:if="{{advancedOpen}}">
+    <view class="field">
+      <view>
+        <text class="field-label">网格线</text>
+        <text class="field-hint">图纸显示格线，方便对位</text>
+      </view>
+      <switch class="switch" checked="{{params.gridLine}}" bindchange="onSwitch" data-key="gridLine" />
+    </view>
+
+    <view class="field">
+      <view>
+        <text class="field-label">色号标注</text>
+        <text class="field-hint">每格标注色号，打印后可照着拼</text>
+      </view>
+      <switch class="switch" checked="{{params.codeLabel}}" bindchange="onSwitch" data-key="codeLabel" />
+    </view>
+
+    <view class="field">
+      <view>
+        <text class="field-label">去背景</text>
+        <text class="field-hint">识别纯色背景并留空，减少用量</text>
+      </view>
+      <switch class="switch" checked="{{params.removeBg}}" bindchange="onSwitch" data-key="removeBg" />
+    </view>
+
+    <view class="field" wx:if="{{params.removeBg}}">
+      <view class="col">
+        <text class="field-label">背景容差</text>
+        <text class="field-hint">{{params.bgTolerance}} · 越大识别越激进</text>
+      </view>
+      <slider class="slider slider-sm" min="0" max="120" step="5" value="{{params.bgTolerance}}"
+        activeColor="#ff5b7f" block-size="18" bindchange="onBgToleranceChange" />
+    </view>
+
+    <view class="field">
+      <view>
+        <text class="field-label">杂色合并</text>
+        <text class="field-hint">合并相近色块，减少零碎色</text>
+      </view>
+      <switch class="switch" checked="{{params.mergeSimilar}}" bindchange="onSwitch" data-key="mergeSimilar" />
+    </view>
+
+    <view class="field" wx:if="{{params.mergeSimilar}}">
+      <view class="col">
+        <text class="field-label">合并阈值</text>
+        <text class="field-hint">ΔE {{params.mergeDelta}} · 越大合并越激进</text>
+      </view>
+      <slider class="slider slider-sm" min="2" max="40" step="1" value="{{params.mergeDelta}}"
+        activeColor="#ff5b7f" block-size="18" bindchange="onMergeDeltaChange" />
+    </view>
+
+    <view class="field">
+      <view>
+        <text class="field-label">图片增强</text>
+        <text class="field-hint">提高对比度与饱和度，适合偏灰的照片</text>
+      </view>
+      <switch class="switch" checked="{{params.enhance}}" bindchange="onSwitch" data-key="enhance" />
+    </view>
+
+    <view class="field">
+      <view>
+        <text class="field-label">抖动</text>
+        <text class="field-hint">模拟渐变过渡，会产生零碎色</text>
+      </view>
+      <switch class="switch" checked="{{params.dither}}" bindchange="onSwitch" data-key="dither" />
+    </view>
+    </block>
+  </view>
+
+  <!-- ============ 板数 ============ -->
+  <view class="card">
+    <view class="card-title">
+      <text>板数 / 格数</text>
+      <text class="sub">决定图纸精细度</text>
+    </view>
+    <view class="chips">
+      <view wx:for="{{boardOptions}}" wx:key="value"
+        class="chip {{params.boardCount === item.value ? 'chip-active' : ''}}"
+        bindtap="onBoardChange" data-value="{{item.value}}">
+        {{item.label}}
+      </view>
+    </view>
+    <view class="hint">
+      格数越大细节越多，但拼起来更费时间；格数小则成品快、出图容错高。
+    </view>
+  </view>
+
+  <!-- ============ 算法模式 ============ -->
+  <view class="card">
+    <view class="card-title"><text>算法模式</text></view>
+    <view class="mode-row">
+      <view class="mode {{params.mode === 'cartoon' ? 'mode-active' : ''}}" bindtap="onModeChange" data-mode="cartoon">
+        <text class="mode-icon">🎭</text>
+        <text class="mode-name">卡通主导色</text>
+        <text class="mode-desc">取区域内出现最多的颜色，消除深浅交界黑边，轮廓更清晰</text>
+      </view>
+      <view class="mode {{params.mode === 'photo' ? 'mode-active' : ''}}" bindtap="onModeChange" data-mode="photo">
+        <text class="mode-icon">🖼</text>
+        <text class="mode-name">照片均值</text>
+        <text class="mode-desc">计算区域平均色，过渡柔和，适合风景人像</text>
+      </view>
+    </view>
+  </view>
+
+  <!--
+    豆子规格下移到此处（v0.9）：
+    这是低频选项 —— 选定后几乎不改。原先夹在算法模式与颜色数上限之间，
+    把高频的调参区割成两段。现与库存约束归拢到页面下部。
+  -->
+  <!-- ============ 豆子规格 ============ -->
+  <view class="card">
+    <view class="card-title"><text>豆子规格</text></view>
+    <view class="chips">
+      <view wx:for="{{beadSizes}}" wx:key="key"
+        class="chip {{params.beadSize === item.key ? 'chip-active' : ''}}"
+        bindtap="onBeadSizeChange" data-value="{{item.key}}">
+        {{item.label}}
+      </view>
+    </view>
+    <view class="chips" style="margin-top:20rpx">
+      <view wx:for="{{beadTypes}}" wx:key="key"
+        class="chip {{params.beadType === item.key ? 'chip-active' : ''}}"
+        bindtap="onBeadTypeChange" data-value="{{item.key}}">
+        {{item.label}}
+      </view>
+    </view>
+    <view class="warn-box" wx:if="{{warnAge}}">
+      <text>⚠️ 2.6mm 迷你豆属小零件，谨防误吞，建议 14 岁以上使用，且须在成人看护下拼装。</text>
+    </view>
+    <view class="warn-box" wx:if="{{params.beadType === 'fusion'}}">
+      <text>🔥 加热融合需使用熨烫，必须由成人操作，且远离儿童与宠物。</text>
+    </view>
+  </view>
+
+  <!-- ============ 库存约束 ============ -->
+  <view class="card">
+    <view class="card-title">
+      <text>库存约束</text>
+      <text class="sub" bindtap="goCabinet">管理豆柜</text>
+    </view>
+    <view class="field">
+      <view>
+        <text class="field-label">仅用豆柜库存色</text>
+        <text class="field-hint">{{inventoryHint}}</text>
+      </view>
+      <switch class="switch" checked="{{useInventory}}" bindchange="onUseInventory" />
+    </view>
+  </view>
+
+  <view class="privacy-note" style="margin-bottom:24rpx">
+    <text class="lock">🔒</text>
+    <text class="note-text">所有处理在本机完成，图片不会上传。</text>
+  </view>
+
+  <view class="footer">
+    <view class="btn btn-outline" style="flex:1" bindtap="onBack">返回</view>
+    <view class="btn btn-primary" style="flex:2" bindtap="onGenerate">生成图纸</view>
+  </view>
+  <view class="footer-space"></view>
+</view>

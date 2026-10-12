@@ -1,0 +1,48 @@
+<!-- components/crop-frame/crop-frame.wxml -->
+<view class="cf">
+
+  <!-- 取景台：图片 aspectFit 铺满，选框与遮罩叠加其上 -->
+  <view class="cf-stage">
+    <image class="cf-img" src="{{src}}" mode="aspectFit" />
+
+    <block wx:if="{{ready}}">
+      <!-- 四块遮罩围出中间孔洞 -->
+      <view class="cf-mask" style="{{maskTop}}"></view>
+      <view class="cf-mask" style="{{maskBottom}}"></view>
+      <view class="cf-mask" style="{{maskLeft}}"></view>
+      <view class="cf-mask" style="{{maskRight}}"></view>
+
+      <!-- 选框：白边 + 九宫格 + 四角把手 -->
+      <view class="cf-frame" style="{{frameStyle}}">
+        <view class="cf-grid cf-grid-v1"></view>
+        <view class="cf-grid cf-grid-v2"></view>
+        <view class="cf-grid cf-grid-h1"></view>
+        <view class="cf-grid cf-grid-h2"></view>
+        <view class="cf-handle cf-h-tl"></view>
+        <view class="cf-handle cf-h-tr"></view>
+        <view class="cf-handle cf-h-bl"></view>
+        <view class="cf-handle cf-h-br"></view>
+      </view>
+    </block>
+
+    <!--
+      触摸层：独立一层铺满，确保独占事件（z-index 见 wxss）。
+
+      ⚠️ 事件绑定的坑（2026-10-13）：
+      1. 同一元素不能同时绑 catchtouchmove 和 bindtouchmove ——
+         catch 会截断冒泡，move 事件可能收不到，表现为「划不动」。
+      2. 但若全用 bind，拖动时页面会跟着一起滚动，手感很差。
+      折中：touchstart 用 catch（宣告接管手势），
+      touchmove 也用 catch（独占，防止页面滚动），
+      touchend/cancel 用 catch（及时收尾）。
+      由于触摸层是最高层且独占，用户想滑走页面需从取景台外起手 ——
+      这与微信头像上传的交互一致。
+    -->
+    <view class="cf-touch"
+      catchtouchstart="onTouchStart"
+      catchtouchmove="onTouchMove"
+      catchtouchend="onTouchEnd"
+      catchtouchcancel="onTouchEnd"></view>
+  </view>
+
+</view>

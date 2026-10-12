@@ -1,0 +1,367 @@
+/* pages/result/result.wxss */
+
+/*
+ * 图纸卡整体收紧（v0.9）：
+ * 图纸本身有留白，外层再包 28rpx 内边距会显得松垮。
+ * 单独覆盖这一张卡的 padding 与标题下边距，不影响其他卡片。
+ */
+.board-card {
+  padding: 20rpx;
+}
+.board-card .card-title {
+  margin-bottom: 12rpx;
+}
+
+/* ============ 放大镜提示 ============ */
+/*
+ * 「长按放大」提示。
+ * 字体/字号/颜色直接复用全局工具类 .t-xs + .t-dim（22rpx / --c-text-3），
+ * 与页面其它辅助说明（如留空角标说明）完全一致，这里只补上外间距。
+ */
+.magnifier-hint {
+  margin-top: 12rpx;
+  line-height: 1.6;
+}
+
+/* ============ 规格 ============ */
+/*
+ * 成品信息卡紧凑化（v0.9）：2×2 网格改为 1×4 横排，卡片高度约减半。
+ * 四项指标（尺寸/格数/颜色/备豆）都是短数字，横排一屏放得下，
+ * 且首屏能露出更多内容。
+ */
+.spec-grid {
+  display: flex;
+  flex-wrap: wrap;
+}
+.spec-item {
+  width: 25%;
+  text-align: center;
+  padding: 8rpx 0;
+}
+.spec-val {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--c-brand);
+  margin-bottom: 2rpx;
+  /* 数字可能较长（如 104×104），缩小字号后仍要能完整显示 */
+  word-break: break-all;
+}
+.spec-label {
+  display: block;
+  font-size: 19rpx;
+  color: var(--c-text-3);
+}
+.spec-card {
+  padding: 18rpx 20rpx;
+}
+
+.spec-foot {
+  margin-top: 10rpx;
+  padding-top: 12rpx;
+  border-top: 2rpx solid var(--c-line);
+  text-align: center;
+}
+
+/* ============ 库存缺口 ============ */
+.shortage-row {
+  display: flex;
+  align-items: center;
+  padding: 14rpx 0;
+  border-bottom: 2rpx solid var(--c-line);
+}
+.shortage-row:last-child {
+  border-bottom: none;
+}
+.shortage-swatch {
+  width: 34rpx;
+  height: 34rpx;
+  border-radius: 6rpx;
+  margin-right: 16rpx;
+  border: 1rpx solid rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+.shortage-code {
+  font-size: 23rpx;
+  font-weight: 600;
+  width: 68rpx;
+  flex-shrink: 0;
+}
+.shortage-name {
+  flex: 1;
+  /* 同 .color-name：缺料色名来自色库，长度不可控 */
+  min-width: 0;
+  font-size: 23rpx;
+  color: var(--c-text-2);
+  word-break: break-all;
+}
+.shortage-num {
+  font-size: 22rpx;
+  color: var(--c-warn);
+}
+
+.tip {
+  margin-top: 16rpx;
+  padding: 14rpx 18rpx;
+  background: #f6f7f9;
+  border-radius: 10rpx;
+  font-size: 21rpx;
+  color: var(--c-text-3);
+  line-height: 1.6;
+}
+
+/* ============ 画布 ============ */
+.canvas-wrap {
+  width: 100%;
+  overflow: auto;
+  background: #f6f7f9;
+  border-radius: 12rpx;
+  padding: 12rpx;
+  display: flex;
+  justify-content: center;
+}
+/*
+ * 画布内层：故意**不设任何 padding**，它是「可用区基准」。
+ *
+ * JS 用 wx.createSelectorQuery().select('.canvas-stage').boundingClientRect()
+ * 实测它的宽度来决定单格尺寸。boundingClientRect 返回 border-box，
+ * 若直接测带 padding 的 .canvas-wrap，会把 20rpx×2 的内边距算进可用宽度，
+ * 画布仍会超宽 —— 这与历史代码用 windowWidth - 40 估算不准是同源问题。
+ *
+ * width:100% 相对 .canvas-wrap 的**内容盒**解析，与 canvas 自身尺寸无关，
+ * 因此即使 canvas 还没拿到尺寸也能测到稳定值。
+ */
+/*
+ * 留空角标说明（v0.9）：
+ * 图纸左上角的蓝圈白点是「拼接起点」标记。它在导出图里同样保留，
+ * 没有这行说明，用户只会把它当成渲染缺陷或多余的色块。
+ */
+.marker-tip {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+.marker-dot {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+  background: rgba(61, 126, 255, 0.92);
+  border: 2rpx solid #ffffff;
+  box-shadow: 0 0 0 1rpx rgba(61, 126, 255, 0.35);
+  margin-right: 10rpx;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.marker-text {
+  /* 与 .magnifier-hint 同为辅助说明，字号统一 22rpx（= 全局 .t-xs） */
+  font-size: 22rpx;
+  color: var(--c-text-3);
+  line-height: 1.6;
+}
+.canvas-stage {
+  width: 100%;
+  flex-shrink: 0;
+  /*
+   * 自身作为 flex 容器把 canvas 水平居中。
+   * ⚠️ width:100% 必须保留 —— 它是 JS 实测可用宽度的基准，
+   *    改成 fit-content 会让实测值反过来依赖 canvas 尺寸，形成循环依赖。
+   *    居中只该由内部的 justify-content 负责，不动宽度。
+   */
+  display: flex;
+  justify-content: center;
+  /*
+   * 放大镜触摸层用 position:absolute 覆盖在画布上，
+   * 需要本元素作为定位参照，否则会跑到页面左上角。
+   */
+  position: relative;
+}
+
+/* magnifier 组件本体不占布局，否则会把 canvas 挤到下一行 */
+.canvas-stage .mg-host {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+}
+
+/*
+ * ⚠️ flex-shrink: 0 是「图纸被横向压扁」bug 的直接止血点。
+ *
+ * .canvas-wrap 是 flex 容器，主轴为水平方向；canvas 作为子项默认
+ * flex-shrink:1，超出容器时会被**压缩**（而不是溢出）。
+ * 结果是 CSS 显示宽度被压窄，而 canvas.width 缓冲仍按 layout.width
+ * → 显示比例失配 = 图纸横向压扁。
+ *
+ * 本项目已从根上消除溢出条件（实测容器 + 等比缩小到完整可见），
+ * 这条声明是最后一道防线：万一将来估算再失效，表现会是
+ * 「出现了滚动条」（用户看得见）而不是「图纸被静默压扁」。
+ */
+.board-canvas {
+  flex-shrink: 0;
+  border-radius: 8rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.08);
+}
+
+/* ============ 用量分组 ============ */
+.group-block {
+  margin-bottom: 28rpx;
+}
+.group-block:last-of-type {
+  margin-bottom: 0;
+}
+.group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+  padding-bottom: 12rpx;
+  border-bottom: 2rpx solid var(--c-line);
+}
+.group-name {
+  font-size: 25rpx;
+  font-weight: 600;
+  color: var(--c-text-2);
+}
+.group-meta {
+  font-size: 21rpx;
+  color: var(--c-text-3);
+}
+
+.usage-grid {
+  display: flex;
+  flex-wrap: wrap;
+}
+.usage-item {
+  width: 50%;
+  display: flex;
+  align-items: center;
+  padding: 12rpx 0;
+}
+.usage-swatch {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 8rpx;
+  margin-right: 14rpx;
+  border: 1rpx solid rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+.usage-text {
+  flex: 1;
+  min-width: 0;
+  padding-right: 10rpx;
+}
+.usage-code {
+  display: block;
+  font-size: 23rpx;
+  font-weight: 600;
+}
+.usage-name {
+  display: block;
+  font-size: 20rpx;
+  color: var(--c-text-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.usage-count {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: var(--c-brand);
+}
+
+.total-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24rpx;
+  padding-top: 24rpx;
+  border-top: 3rpx solid var(--c-line);
+}
+
+/* ============ 分板施工单 ============ */
+.sheet {
+  padding: 20rpx 0;
+  border-bottom: 2rpx solid var(--c-line);
+}
+.sheet:last-child {
+  border-bottom: none;
+}
+.sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14rpx;
+}
+.sheet-title {
+  font-size: 26rpx;
+  font-weight: 600;
+}
+.sheet-meta {
+  font-size: 21rpx;
+  color: var(--c-text-3);
+}
+.sheet-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+.sheet-item {
+  padding: 8rpx 16rpx;
+  background: #f3f4f6;
+  border-radius: 20rpx;
+  font-size: 21rpx;
+  color: var(--c-text-2);
+}
+.sheet-code {
+  font-weight: 600;
+}
+
+/* ============ 声明 ============ */
+.disclaimer {
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+}
+.dis-item {
+  font-size: 21rpx;
+  color: var(--c-text-3);
+  line-height: 1.7;
+  padding-left: 28rpx;
+  position: relative;
+}
+.dis-item::before {
+  content: '·';
+  position: absolute;
+  left: 10rpx;
+  font-weight: 700;
+}
+
+/* ============ 提示框 ============ */
+.warn-box {
+  padding: 18rpx 20rpx;
+  background: #fff5e8;
+  border-radius: var(--radius-sm);
+  font-size: 22rpx;
+  color: #b26a00;
+  line-height: 1.65;
+  margin-bottom: 24rpx;
+}
+/* ============ 分享按钮 ============ */
+/*
+ * button 自带边框与背景，需重置后才能与 .btn 的视觉对齐。
+ * ::after 是 button 的伪元素边框，必须单独去掉。
+ */
+.share-btn {
+  margin-top: 20rpx;
+  margin-left: 0;
+  margin-right: 0;
+  border: none;
+  background: var(--c-brand-soft);
+  color: var(--c-brand);
+  font-weight: 600;
+}
+.share-btn::after { border: none; }
+.share-btn:active { transform: scale(0.98); opacity: 0.9; }

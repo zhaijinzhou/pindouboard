@@ -1,0 +1,19 @@
+{
+  "name": "pindou-miniapp",
+  "version": "0.2.0",
+  "private": true,
+  "description": "拼豆出图小程序 —— 纯本地图像处理，输出拼豆图纸与用量清单",
+  "scripts": {
+    "test": "node tools/check-wxss.js && node tools/check-flex.js && node tools/check-crop.js && node tools/test-core.js && node tools/test-render.js",
+    "test:core": "node tools/test-core.js",
+    "test:render": "node tools/test-render.js",
+    "check:wxss": "node tools/check-wxss.js",
+    "check:flex": "node tools/check-flex.js",
+    "check:crop": "node tools/check-crop.js",
+    "build:palette": "node tools/build-palette.js"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=18"
+  }
+}

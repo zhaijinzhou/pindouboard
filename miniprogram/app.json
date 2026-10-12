@@ -1,0 +1,26 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/config/config",
+    "pages/editor/editor",
+    "pages/result/result",
+    "pages/cabinet/cabinet"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarTitleText": "拼豆出图",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f6f7f9",
+    "navigationStyle": "default"
+  },
+  "permission": {
+    "scope.writePhotosAlbum": {
+      "desc": "用于保存拼豆图纸图片到相册"
+    }
+  },
+  "requiredPrivateInfos": [],
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

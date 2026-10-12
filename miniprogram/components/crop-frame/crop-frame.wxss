@@ -1,0 +1,105 @@
+/* components/crop-frame/crop-frame.wxss */
+
+/*
+ * ⚠️ 层级与事件（2026-10-13 修复「选框划不动」）
+ *
+ * 取景台上叠了四层：图片 / 遮罩 / 选框 / 触摸层。
+ * 若不给触摸层显式 z-index，多个 absolute 兄弟元素在小程序 WebView 下
+ * 的叠放顺序并不可靠 —— 触摸层会被遮罩或选框压住，表现为
+ * 「手指按下去没反应 / 划不动」。
+ * 因此：触摸层必须显式 z-index 最高，且遮罩、选框都要 pointer-events:none
+ * 确保不参与命中测试。
+ */
+.cf-stage {
+  position: relative;
+  width: 100%;
+  /* 取景台高度：方形，给用户稳定的构图空间 */
+  height: 620rpx;
+  border-radius: 20rpx;
+  overflow: hidden;
+  background: #2b2f36;
+  /* ⚠️ 必须显式声明，否则触摸层的层级基准不确定 */
+  z-index: 0;
+}
+
+.cf-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* 遮罩层：只做视觉，不参与命中 */
+.cf-mask {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/*
+ * 选框：只做视觉，不参与命中测试。
+ *
+ * ⚠️ WXSS **不支持通配选择器** `*`（会报 unexpected token `*`），
+ *    所以不要写 `.cf-frame * { pointer-events: none }` 这类兜底规则。
+ *    好在 `pointer-events` 是**继承属性**，父级设了 none，
+ *    其子元素（九宫格线、四角把手）自动继承，无需重复声明。
+ *    `.cf-grid` / `.cf-handle` 自身也都有 `position: absolute`，
+ *    在这里统一列出它们的 pointer-events 只是为了可读性，
+ *    删掉不影响行为。
+ */
+.cf-frame {
+  position: absolute;
+  box-sizing: border-box;
+  border: 3rpx solid #ffffff;
+  z-index: 2;
+  pointer-events: none;   /* 子元素自动继承 */
+}
+
+/* 九宫格参考线 */
+.cf-grid {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.45);
+}
+.cf-grid-v1,
+.cf-grid-v2 {
+  top: 0;
+  bottom: 0;
+  width: 2rpx;
+}
+.cf-grid-v1 { left: 33.333%; }
+.cf-grid-v2 { left: 66.666%; }
+.cf-grid-h1,
+.cf-grid-h2 {
+  left: 0;
+  right: 0;
+  height: 2rpx;
+}
+.cf-grid-h1 { top: 33.333%; }
+.cf-grid-h2 { top: 66.666%; }
+
+/* 四角把手 */
+.cf-handle {
+  position: absolute;
+  width: 44rpx;
+  height: 44rpx;
+  border: 5rpx solid #ffffff;
+  box-sizing: border-box;
+}
+.cf-h-tl { left: -6rpx; top: -6rpx; border-right: none; border-bottom: none; }
+.cf-h-tr { right: -6rpx; top: -6rpx; border-left: none; border-bottom: none; }
+.cf-h-bl { left: -6rpx; bottom: -6rpx; border-right: none; border-top: none; }
+.cf-h-br { right: -6rpx; bottom: -6rpx; border-left: none; border-top: none; }
+
+/*
+ * 触摸层：必须压在最上层并独占事件。
+ * z-index 高于遮罩(1)与选框(2)，否则收不到 touchmove。
+ */
+.cf-touch {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+}

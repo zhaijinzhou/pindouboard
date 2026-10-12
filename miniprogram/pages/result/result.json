@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "图纸与清单",
+  "usingComponents": {
+    "magnifier": "/components/magnifier/magnifier"
+  }
+}

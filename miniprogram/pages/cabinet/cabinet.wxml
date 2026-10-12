@@ -1,0 +1,105 @@
+<!-- pages/cabinet/cabinet.wxml -->
+<view class="page">
+
+  <!-- ============ 头部统计 ============ -->
+  <view class="card">
+    <view class="card-title">
+      <text>库存总览</text>
+      <text class="sub">{{brand}} · {{beadSize}}</text>
+    </view>
+    <view class="stat-row">
+      <view class="stat-item">
+        <text class="stat-val">{{stats.kinds}}</text>
+        <text class="stat-label">有色号</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-val">{{stats.total}}</text>
+        <text class="stat-label">总颗数</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-val">{{stats.series}}</text>
+        <text class="stat-label">系列数</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- ============ 录入方式（Q-07） ============ -->
+  <view class="card">
+    <view class="card-title"><text>添加色号</text></view>
+
+    <view class="entry-tabs">
+      <view class="entry-tab {{entryTab === 'quick' ? 'active' : ''}}" bindtap="onTabChange" data-tab="quick">
+        <text class="entry-tab-icon">✍️</text>
+        <text class="entry-tab-name">手动输入</text>
+      </view>
+      <view class="entry-tab {{entryTab === 'fromPattern' ? 'active' : ''}}" bindtap="onTabChange" data-tab="fromPattern">
+        <text class="entry-tab-icon">📋</text>
+        <text class="entry-tab-name">按图纸批量</text>
+      </view>
+    </view>
+
+    <!-- 手动输入 -->
+    <block wx:if="{{entryTab === 'quick'}}">
+      <view class="input-row">
+        <input class="code-input" placeholder="色号 如 H21" placeholder-class="ph"
+          value="{{codeInput}}" bindinput="onCodeInput" />
+        <input class="qty-input" type="number" placeholder="数量" placeholder-class="ph"
+          value="{{qtyInput}}" bindinput="onQtyInput" />
+        <view class="btn btn-primary btn-sm add-btn" bindtap="onAdd">加入</view>
+      </view>
+      <view class="t-xs t-dim" style="margin-top:14rpx">
+        常用规格建议：5mm 一格约 100~150 颗，2.6mm 一格约 200~300 颗
+      </view>
+    </block>
+
+    <!-- 按图纸批量 -->
+    <block wx:else>
+      <view class="t-sm t-dim2" style="margin-bottom:16rpx">
+        <text wx:if="{{hasPattern}}">按最近图纸的用量一键填入库存：</text>
+        <text wx:else>暂无最近图纸，请先生成一张图纸。</text>
+      </view>
+      <view class="btn btn-primary btn-block" wx:if="{{hasPattern}}" bindtap="onFillFromPattern">
+        填入 {{patternCodeCount}} 个色号
+      </view>
+      <view class="btn btn-plain btn-block" wx:if="{{!hasPattern}}" disabled>暂无可用图纸</view>
+    </block>
+  </view>
+
+  <!-- ============ 库存列表 ============ -->
+  <view class="card">
+    <view class="card-title">
+      <text>库存明细</text>
+      <view class="row">
+        <text class="sub" bindtap="goResult">核对图纸</text>
+        <text class="sub" style="margin-left:24rpx;color:var(--c-danger)" bindtap="onClear">清空</text>
+      </view>
+    </view>
+
+    <view class="empty" wx:if="{{!items.length}}">
+      <view class="empty-icon">🗄</view>
+      <view class="empty-text">豆柜还是空的</view>
+      <view class="empty-text" style="font-size:22rpx;margin-top:8rpx">
+        添加库存后，出图可限定只用手头的豆子
+      </view>
+    </view>
+
+    <view class="inv-item" wx:for="{{items}}" wx:key="code">
+      <view class="inv-swatch" style="background:{{item.hex}}"></view>
+      <view class="inv-text">
+        <text class="inv-code">{{item.code}}</text>
+        <text class="inv-name">{{item.name}}</text>
+      </view>
+      <view class="stepper">
+        <view class="stepper-btn" bindtap="onDec" data-code="{{item.code}}">−</view>
+        <text class="stepper-val">{{item.qty}}</text>
+        <view class="stepper-btn" bindtap="onInc" data-code="{{item.code}}">+</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ============ 说明 ============ -->
+  <view class="privacy-note">
+    <text class="lock">🔒</text>
+    <text class="note-text">库存数据仅保存在本机，不会上传。开启库存约束后，出图只会匹配豆柜里有的色号。</text>
+  </view>
+</view>

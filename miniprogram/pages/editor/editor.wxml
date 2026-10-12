@@ -1,0 +1,131 @@
+<!-- pages/editor/editor.wxml -->
+<view class="page">
+
+  <!-- ============ 加载中 ============ -->
+  <block wx:if="{{loading}}">
+    <view class="card">
+      <view class="card-title"><text>正在处理</text></view>
+      <view class="progress-item" wx:for="{{progressSteps}}" wx:key="label">
+        <text class="progress-dot {{item.done ? 'done' : ''}}">{{item.done ? '✓' : ''}}</text>
+        <text class="progress-label {{item.done ? 'done' : ''}}">{{item.label}}</text>
+      </view>
+      <view class="skeleton" style="height:400rpx;margin-top:24rpx;border-radius:16rpx"></view>
+    </view>
+  </block>
+
+  <!-- ============ 图纸 ============ -->
+  <block wx:else>
+    <!-- 健康度总览 -->
+    <view class="card health" wx:if="{{report}}">
+      <view class="row-between">
+        <view class="row">
+          <view class="health-dot health-{{report.level}}"></view>
+          <text class="t-md t-bold">{{healthTitle}}</text>
+        </view>
+        <text class="t-sm t-dim">{{pattern.colorCount || colors.length}} 色 · {{pattern.totalCount || totalCount}} 格</text>
+      </view>
+      <view class="t-sm t-dim2" style="margin-top:12rpx;line-height:1.6">{{report.summary}}</view>
+    </view>
+
+    <!-- 图纸画布 -->
+    <view class="card">
+      <view class="card-title">
+        <text>图纸预览</text>
+        <view class="row">
+          <text class="sub" bindtap="toggleShowCode">{{showCode ? '隐藏色号' : '显示色号'}}</text>
+        </view>
+      </view>
+
+      <!-- 成品指标（v0.7 由参数配置页移来）：
+           这里才是它的正确位置 —— 尺寸/格数只有对着真实图纸才有意义，
+           放在配置页既占空间又看不到图。 -->
+      <view class="card summary">
+        <view class="summary-item">
+          <text class="summary-val">{{metrics.width}}×{{metrics.height}}</text>
+          <text class="summary-label">成品尺寸 cm</text>
+        </view>
+        <view class="summary-divider"></view>
+        <view class="summary-item">
+          <text class="summary-val">{{metrics.cols}}×{{metrics.rows}}</text>
+          <text class="summary-label">格点阵</text>
+        </view>
+        <view class="summary-divider"></view>
+        <view class="summary-item">
+          <text class="summary-val">{{metrics.total}}</text>
+          <text class="summary-label">总格数</text>
+        </view>
+      </view>
+
+      <view class="canvas-wrap">
+        <view class="canvas-stage">
+          <magnifier class="mg-host"
+            pattern="{{pattern}}" layout="{{layout}}"
+            showCode="{{showCode}}" gridLine="{{pattern.render.gridLine}}" />
+          <canvas type="2d" id="boardCanvas" class="board-canvas"
+            style="width:{{canvasW}}px;height:{{canvasH}}px;" />
+        </view>
+      </view>
+      <view class="t-xs t-dim t-center magnifier-hint">长按图纸可放大查看色号细节</view>
+    </view>
+
+    <!-- 体检明细 -->
+    <view class="card" wx:if="{{report && report.items.length}}">
+      <view class="card-title">
+        <text>配色体检</text>
+        <text class="sub">{{warnCount}} 项待优化</text>
+      </view>
+      <view class="check-item" wx:for="{{report.items}}" wx:key="key">
+        <view class="check-icon check-{{item.level}}">{{item.level === 'pass' ? '✓' : item.level === 'warn' ? '!' : '×'}}</view>
+        <view class="flex-1">
+          <text class="check-title">{{item.title}}</text>
+          <text class="check-detail">{{item.detail}}</text>
+          <text class="check-advice" wx:if="{{item.advice}}">💡 {{item.advice}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!--
+      手动修图已于 v0.9 移除。
+      逐格改色会让「所见即所得」失效：改过的格子与算法输出不再一致，
+      重算后又会丢失，用户分不清哪张才是最终图纸。
+      色号配错应在参数侧解决（颜色上限 / 去背景 / 杂色合并 / 算法模式）。
+    -->
+    <view class="card" wx:if="{{isolatedGroups.length}}">
+      <view class="card-title">
+        <text>孤立格位置</text>
+        <text class="sub">{{isolatedGroups.length}} 处</text>
+      </view>
+      <view class="t-sm t-dim2" style="margin-bottom:12rpx">
+        这些格子与周围色块不连通，成品上会显得零碎。可参考位置回配置页调整参数。
+      </view>
+      <view class="chips">
+        <view wx:for="{{isolatedGroups}}" wx:key="index"
+          class="chip" bindtap="onJumpIsolated" data-index="{{index}}">
+          第 {{item.x + 1}} 行 {{item.y + 1}} 列 · {{item.isolatedCount}} 格
+        </view>
+      </view>
+    </view>
+
+    <!-- 用量速览 -->
+    <view class="card">
+      <view class="card-title">
+        <text>用到的颜色</text>
+        <text class="sub">共 {{colors.length}} 色</text>
+      </view>
+      <view class="color-list">
+        <view class="color-row" wx:for="{{colors}}" wx:key="code">
+          <view class="color-swatch" style="background:{{item.hex}}"></view>
+          <text class="color-code-text">{{item.code}}</text>
+          <text class="color-name">{{item.name}}</text>
+          <text class="color-count">{{item.count}} 颗</text>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <view class="footer" wx:if="{{!loading}}">
+    <view class="btn btn-outline" style="flex:1" bindtap="onRegenerate">重算</view>
+    <view class="btn btn-primary" style="flex:2" bindtap="onNext">下一步 · 导出</view>
+  </view>
+  <view class="footer-space" wx:if="{{!loading}}"></view>
+</view>

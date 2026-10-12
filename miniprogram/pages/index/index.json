@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "拼豆出图",
+  "usingComponents": {
+    "crop-frame": "/components/crop-frame/crop-frame"
+  }
+}

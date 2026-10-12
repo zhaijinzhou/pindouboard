@@ -1,0 +1,361 @@
+/* ============ 全局设计变量 ============ */
+page {
+  --c-bg: #f6f7f9;
+  --c-card: #ffffff;
+  --c-text: #1a1a1a;
+  --c-text-2: #5c6066;
+  --c-text-3: #9aa0a6;
+  --c-line: #ebedf0;
+  --c-brand: #ff5b7f;
+  --c-brand-soft: #fff0f4;
+  --c-accent: #3d7eff;
+  --c-success: #17b877;
+  --c-warn: #ff9f2e;
+  --c-danger: #f0453a;
+  --radius: 24rpx;
+  --radius-sm: 12rpx;
+  --shadow: 0 4rpx 24rpx rgba(20, 24, 40, 0.06);
+}
+
+page {
+  background: var(--c-bg);
+  color: var(--c-text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-size: 28rpx;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+view,
+text,
+button,
+input,
+scroll-view {
+  box-sizing: border-box;
+}
+
+/* ============ 布局 ============ */
+.page {
+  min-height: 100vh;
+  padding: 24rpx 24rpx calc(48rpx + env(safe-area-inset-bottom));
+}
+
+.row {
+  display: flex;
+  align-items: center;
+}
+.row-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.col {
+  display: flex;
+  flex-direction: column;
+}
+.flex-1 {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ============ 卡片 ============ */
+.card {
+  background: var(--c-card);
+  border-radius: var(--radius);
+  padding: 28rpx;
+  margin-bottom: 24rpx;
+  box-shadow: var(--shadow);
+}
+
+.card-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--c-text);
+  margin-bottom: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-title .sub {
+  font-size: 24rpx;
+  font-weight: 400;
+  color: var(--c-text-3);
+}
+
+/* ============ 文字 ============ */
+.t-lg { font-size: 34rpx; font-weight: 600; }
+.t-md { font-size: 28rpx; }
+.t-sm { font-size: 24rpx; }
+.t-xs { font-size: 22rpx; }
+.t-dim { color: var(--c-text-3); }
+.t-dim2 { color: var(--c-text-2); }
+.t-brand { color: var(--c-brand); }
+.t-success { color: var(--c-success); }
+.t-warn { color: var(--c-warn); }
+.t-danger { color: var(--c-danger); }
+.t-center { text-align: center; }
+.t-bold { font-weight: 600; }
+
+/* ============ 按钮 ============ */
+/*
+ * 同 .chip：按钮文字的垂直居中不能依赖基线，必须由 flex + 显式
+ * line-height 双重保证。page 的 line-height: 1.5 会被继承进来，
+ * 若不在此压掉，按钮内的裸文本同样会偏下。
+ */
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  height: 88rpx;
+  padding: 0 20rpx;
+  border-radius: 44rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+  box-sizing: border-box;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.btn::after { border: none; }
+/* 按下态只缩放不改尺寸，保证各状态下文字位置一致 */
+.btn:active { transform: scale(0.98); opacity: 0.9; }
+.btn-primary {
+  background: var(--c-brand);
+  color: #fff;
+  box-shadow: 0 8rpx 20rpx rgba(255, 91, 127, 0.28);
+}
+.btn-ghost {
+  background: var(--c-brand-soft);
+  color: var(--c-brand);
+}
+.btn-plain {
+  background: #f3f4f6;
+  color: var(--c-text-2);
+}
+.btn-outline {
+  background: transparent;
+  border: 2rpx solid var(--c-line);
+  color: var(--c-text-2);
+}
+.btn-sm { height: 60rpx; font-size: 26rpx; border-radius: 30rpx; padding: 0 24rpx; }
+.btn-lg { height: 100rpx; font-size: 32rpx; }
+.btn-block { width: 100%; }
+.btn[disabled] {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+/* ============ 表单 ============ */
+.field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 96rpx;
+  padding: 20rpx 0;
+  border-bottom: 2rpx solid var(--c-line);
+}
+.field:last-child { border-bottom: none; }
+.field-label {
+  font-size: 28rpx;
+  color: var(--c-text);
+  flex-shrink: 0;
+}
+.field-value {
+  font-size: 26rpx;
+  color: var(--c-text-2);
+  text-align: right;
+}
+
+/* ============ 选项组（横向胶囊） ============ */
+/*
+ * ⚠️ 布局约束（2026-10-12 定位，务必遵守）：
+ *
+ *   小程序 `text` 是**行内组件**，官方定位为「只能承载内联文本」。
+ *   在 <text> 上写 display:flex / align-items / justify-content
+ *   在 WebView 与 Skyline 下表现都不稳定 —— flex 声明常被忽略，
+ *   元素仍按行内基线排版，于是背景框被 line-height 撑高、
+ *   文字贴着基线，视觉上「上半留白、下半积压」。
+ *
+ *   正解：选项按钮一律用 <view> 承载（块级容器，flex 行为可预期），
+ *   由本类做 flex 居中。**不要为了少写一个标签而退回 <text>**。
+ *
+ *   另：page 级 line-height: 1.5 会渗透进 chip 的行盒，
+ *   所以这里必须显式 line-height: 1 把行盒压回字号高度。
+ */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16rpx;
+  /* 兜底：即使子项漏了 line-height，也不会因继承而偏移 */
+  line-height: 1;
+}
+.chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  padding: 0 28rpx;
+  min-height: 60rpx;
+  height: 60rpx;
+  border-radius: 30rpx;
+  background: #f3f4f6;
+  color: var(--c-text-2);
+  font-size: 26rpx;
+  box-sizing: border-box;
+  border: 2rpx solid transparent;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, opacity 0.15s;
+}
+/*
+ * 按下态：只改颜色与轻微缩放，**不改尺寸与行高**，
+ * 否则文字会在按下瞬间跳动，状态间就不一致了。
+ */
+.chip:active {
+  transform: scale(0.96);
+  opacity: 0.85;
+}
+.chip-active {
+  background: var(--c-brand-soft);
+  color: var(--c-brand);
+  border-color: var(--c-brand);
+  font-weight: 600;
+}
+/* 禁用态：与其他状态保持同样的盒子模型，仅降低视觉权重 */
+.chip-disabled,
+.chip[disabled] {
+  opacity: 0.4;
+  pointer-events: none;
+}
+/* 多行文字的 chip（如长提示）：放开固定高度，恢复正常行高 */
+.chip-wrap {
+  height: auto;
+  min-height: 60rpx;
+  line-height: 1.45;
+  padding: 12rpx 24rpx;
+}
+
+/* 开关 */
+.switch {
+  transform: scale(0.8);
+}
+
+/* 步进器 */
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+.stepper-btn {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  background: #f3f4f6;
+  color: var(--c-text-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  line-height: 1;
+}
+.stepper-btn.disabled { opacity: 0.35; }
+.stepper-val {
+  min-width: 80rpx;
+  text-align: center;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+/* ============ 标签 ============ */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 6rpx 16rpx;
+  border-radius: 8rpx;
+  font-size: 22rpx;
+  background: var(--c-brand-soft);
+  color: var(--c-brand);
+}
+.tag-gray { background: #f3f4f6; color: var(--c-text-3); }
+.tag-warn { background: #fff5e8; color: var(--c-warn); }
+.tag-danger { background: #fdeceb; color: var(--c-danger); }
+.tag-success { background: #e7f7f0; color: var(--c-success); }
+
+/* ============ 分隔 ============ */
+.divider {
+  height: 2rpx;
+  background: var(--c-line);
+  margin: 24rpx 0;
+}
+
+/* ============ 空态 ============ */
+.empty {
+  padding: 120rpx 40rpx;
+  text-align: center;
+}
+.empty-icon { font-size: 96rpx; margin-bottom: 24rpx; opacity: 0.35; }
+.empty-text { font-size: 28rpx; color: var(--c-text-3); }
+
+/* ============ 底部固定操作栏 ============ */
+.footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 20rpx 24rpx calc(20rpx + env(safe-area-inset-bottom));
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(20rpx);
+  border-top: 2rpx solid var(--c-line);
+  display: flex;
+  gap: 20rpx;
+  z-index: 100;
+}
+.footer-space { height: calc(140rpx + env(safe-area-inset-bottom)); }
+
+/* ============ 骨架屏 ============ */
+.skeleton {
+  background: linear-gradient(90deg, #f0f1f3 25%, #f7f8f9 37%, #f0f1f3 63%);
+  background-size: 400% 100%;
+  animation: skeleton-loading 1.4s ease infinite;
+  border-radius: 8rpx;
+}
+@keyframes skeleton-loading {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+/* ============ 隐私提示条 ============ */
+/*
+ * ⚠️ 布局陷阱（2026-10-12 修复）：
+ *   文本项必须显式写 `min-width: 0`。
+ *   flex 里的 `flex: 1` 只设置了 flex-basis（期望尺寸），
+ *   而 `min-width` 默认值是 `auto`，会被解析成「内容的最小尺寸」。
+ *   长文本撑出的下限会把整项顶出容器 —— 表现为文字不换行、
+ *   全部堆到屏幕右侧甚至溢出。
+ *   `min-width: 0` 解除这个下限，文字才能正常收缩换行。
+ *   同理 `word-break: break-all` 兜底，确保长串也能断行。
+ */
+.privacy-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10rpx;
+  padding: 16rpx 20rpx;
+  background: #eef4ff;
+  border-radius: var(--radius-sm);
+  font-size: 22rpx;
+  color: #3d6bb5;
+  line-height: 1.6;
+  box-sizing: border-box;
+  /* 提示条本身也不能被内容撑破 */
+  max-width: 100%;
+}
+/* 图标：固定不压缩 */
+.privacy-note .lock {
+  flex-shrink: 0;
+}
+/* 正文：可收缩、可换行 */
+.privacy-note .note-text {
+  flex: 1;
+  min-width: 0;
+  word-break: break-all;
+}

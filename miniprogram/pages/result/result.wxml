@@ -1,0 +1,189 @@
+<!-- pages/result/result.wxml -->
+<view class="page">
+
+  <!-- ============ 成品信息 ============ -->
+  <view class="card spec-card">
+    <view class="spec-grid">
+      <view class="spec-item">
+        <text class="spec-val">{{checklist.size}}</text>
+        <text class="spec-label">成品尺寸 cm</text>
+      </view>
+      <view class="spec-item">
+        <text class="spec-val">{{checklist.totalCount}}</text>
+        <text class="spec-label">总格数</text>
+      </view>
+      <view class="spec-item">
+        <text class="spec-val">{{checklist.colorCount}}</text>
+        <text class="spec-label">颜色数</text>
+      </view>
+      <view class="spec-item">
+        <text class="spec-val">{{checklist.suggestedBeads}}</text>
+        <text class="spec-label">建议备豆</text>
+      </view>
+    </view>
+    <view class="spec-foot">
+      <text class="t-sm t-dim2">{{checklist.beadSizeLabel}} · {{checklist.boardSize}} 格/板 · 共 {{checklist.boardCount}} 块板</text>
+    </view>
+  </view>
+
+  <!-- ============ 安全提示 ============ -->
+  <view class="warn-box" wx:if="{{checklist.warnAge}}">
+    <text>⚠️ 含小零件，谨防误吞。2.6mm 迷你豆建议 14 岁以上使用，须在成人看护下拼装。</text>
+  </view>
+  <view class="warn-box" wx:if="{{pattern.beadType === 'fusion'}}">
+    <text>🔥 加热融合须由成人操作，熨烫时远离儿童与宠物，注意通风。</text>
+  </view>
+
+  <!-- ============ 库存缺口 ============ -->
+  <view class="card" wx:if="{{checklist.inventory.hasConstraint}}">
+    <view class="card-title">
+      <text>豆柜库存核对</text>
+      <text class="tag {{checklist.inventory.shortage > 0 ? 'tag-warn' : 'tag-success'}}">
+        {{checklist.inventory.shortage > 0 ? '缺 ' + checklist.inventory.shortage + ' 色' : '库存充足'}}
+      </text>
+    </view>
+    <block wx:if="{{checklist.inventory.shortage > 0}}">
+      <view class="t-sm t-dim2" style="margin-bottom:16rpx">以下色号不够，需补货：</view>
+      <view class="shortage-row" wx:for="{{checklist.inventory.shortageList}}" wx:key="code">
+        <view class="shortage-swatch" style="background:{{item.hex}}"></view>
+        <text class="shortage-code">{{item.code}}</text>
+        <text class="shortage-name">{{item.name}}</text>
+        <text class="shortage-num">需 {{item.need}} / 有 {{item.have}}</text>
+      </view>
+      <view class="tip">可在豆柜中更新库存，或关闭库存约束重新出图。</view>
+    </block>
+    <view class="t-sm t-success" wx:else>
+      ✓ 所有色号库存充足，可直接施工
+    </view>
+  </view>
+
+  <!--
+    操作区上移至图纸正上方（v0.9）：
+    导出与分享是本页最高频的两个动作，却原先沉在最底部，
+    用户必须滚过清单、施工单、声明才能找到。
+  -->
+  <!-- ============ 操作 ============ -->
+  <view class="card">
+    <view class="btn btn-primary btn-block btn-lg" bindtap="onExport">导出高清图纸</view>
+    <view class="t-xs t-dim t-center" style="margin-top:14rpx" wx:if="{{exportNote}}">{{exportNote}}</view>
+    <!--
+      ⚠️ 按钮主动分享只能用 open-type="share"：
+      普通 view 上绑 bindtap 调不起分享面板，这是微信的限制。
+      分享内容由本页的 onShareAppMessage 提供。
+    -->
+    <button class="btn btn-ghost btn-block share-btn" open-type="share">
+      分享给好友
+    </button>
+  </view>
+
+  <!--
+    图纸卡下移至用量清单上方（v0.9）：
+    原本夹在库存核对与用量清单之间，把清单打断了。
+    调整后的顺序是「先看图 → 再照着备料」，符合施工的实际流程。
+  -->
+  <!-- ============ 图纸 ============ -->
+  <view class="card board-card">
+    <view class="card-title">
+      <text>图纸</text>
+      <view class="row">
+        <text class="sub" bindtap="toggleShowCode">{{showCode ? '隐藏色号' : '显示色号'}}</text>
+      </view>
+    </view>
+
+    <!--
+      留空角标说明：
+      图纸左上角的蓝圈白点是「拼接起点」标记，用于消除「从哪一格开始拼」的歧义，
+      导出图里同样保留。没有这行说明，用户只会把它当成渲染缺陷。
+    -->
+    <view class="marker-tip">
+      <view class="marker-dot"></view>
+      <text class="marker-text">左上角蓝圈标记为拼接起点，从这一格开始拼</text>
+    </view>
+
+    <view class="canvas-wrap">
+      <view class="canvas-stage">
+        <!--
+          长按图纸进入放大镜。magnifier 组件包裹在画布同尺寸的透明层内，
+          由组件自身接管手势 —— 页面无需处理 touch 事件。
+        -->
+        <magnifier class="mg-host"
+          pattern="{{pattern}}" layout="{{layout}}"
+          showCode="{{showCode}}" gridLine="{{pattern.render.gridLine}}" />
+        <canvas type="2d" id="resultCanvas" class="board-canvas"
+          style="width:{{canvasW}}px;height:{{canvasH}}px;" />
+      </view>
+    </view>
+    <view class="t-xs t-dim t-center magnifier-hint">长按图纸可放大查看色号细节</view>
+  </view>
+
+  <!-- ============ 用量清单 ============ -->
+  <view class="card">
+    <view class="card-title">
+      <text>用量清单</text>
+      <text class="sub" bindtap="copyChecklist">复制</text>
+    </view>
+
+    <view class="group-block" wx:for="{{checklist.groups}}" wx:key="name">
+      <view class="group-head">
+        <text class="group-name">{{item.name}}</text>
+        <text class="group-meta">{{item.kinds}} 色 · {{item.totalCount}} 颗</text>
+      </view>
+      <view class="usage-grid">
+        <view class="usage-item" wx:for="{{item.items}}" wx:for-item="c" wx:key="code">
+          <view class="usage-swatch" style="background:{{c.hex}}"></view>
+          <view class="usage-text">
+            <text class="usage-code">{{c.code}}</text>
+            <text class="usage-name">{{c.name}}</text>
+          </view>
+          <text class="usage-count">{{c.count}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="total-row">
+      <text class="t-sm t-dim2">合计</text>
+      <text class="t-md t-bold">{{checklist.totalCount}} 颗（建议备 {{checklist.suggestedBeads}} 颗）</text>
+    </view>
+  </view>
+
+  <!-- ============ 分板施工单 ============ -->
+  <view class="card">
+    <view class="card-title">
+      <text>分板施工单</text>
+      <text class="sub">{{checklist.sheets.length}} 块板</text>
+    </view>
+    <view class="sheet" wx:for="{{checklist.sheets}}" wx:key="label" wx:if="{{checklist.sheets.length > 1}}">
+      <view class="sheet-head">
+        <text class="sheet-title">{{item.label}}</text>
+        <text class="sheet-meta">{{item.total}} 格 · {{item.kinds}} 色</text>
+      </view>
+      <view class="sheet-list">
+        <text class="sheet-item" wx:for="{{item.list}}" wx:for-item="c" wx:key="code">
+          <text class="sheet-code">{{c.code}}</text> × {{c.count}}
+        </text>
+      </view>
+    </view>
+    <view class="t-sm t-dim2" wx:if="{{checklist.sheets.length <= 1}}">
+      单块板，无需分板施工单。
+    </view>
+  </view>
+
+  <!-- ============ 合规声明 ============ -->
+  <view class="card">
+    <view class="card-title"><text>使用须知</text></view>
+    <view class="disclaimer">
+      <text class="dis-item">{{checklist.disclaimers.copyright}}</text>
+      <text class="dis-item">{{checklist.disclaimers.colorDiff}}</text>
+      <text class="dis-item">{{checklist.disclaimers.age}}</text>
+    </view>
+  </view>
+
+  <canvas type="2d" id="exportCanvas"
+    style="position:fixed;left:-9999px;top:0;width:1px;height:1px;" />
+
+  <view class="footer">
+    <view class="btn btn-outline" style="flex:1" bindtap="goHome">换个图</view>
+    <view class="btn btn-ghost" style="flex:1" bindtap="copyChecklist">复制清单</view>
+  </view>
+  <view class="footer-space"></view>
+</view>

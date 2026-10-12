@@ -1,0 +1,214 @@
+/* pages/config/config.wxss */
+
+/* ============ 折叠按钮 ============ */
+/*
+ * v0.9 调整：原先是白底细边框 + 浅灰字，在白卡片里几乎隐形。
+ *
+ * 配色沿用 .chip-active 的同一套品牌色（浅底 + 品牌字），
+ * 与页面其它可选控件视觉同源；通过「更大字号 + 更粗边框 + 更多内边距」
+ * 来提升权重 —— 它是页面里唯一能展开内容的控件，值得更醒目，
+ * 但不该换成实心色块，那会与 chip 体系割裂。
+ */
+.fold-btn {
+  display: flex;
+  align-items: center;
+  padding: 12rpx 26rpx;
+  border-radius: 999rpx;
+  background: var(--c-brand-soft);
+  border: 2rpx solid var(--c-brand);
+  flex-shrink: 0;
+}
+.fold-btn-active {
+  opacity: 0.75;
+  transform: scale(0.96);
+}
+.fold-btn-text {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--c-brand);
+}
+.fold-arrow {
+  font-size: 23rpx;
+  font-weight: 600;
+  color: var(--c-brand);
+  margin-left: 8rpx;
+  transition: transform 0.2s ease;
+}
+/* 展开时箭头翻转，状态一目了然 */
+.fold-arrow-open {
+  transform: rotate(180deg);
+}
+
+/* ============ 实时预览 ============ */
+/*
+ * 预览卡与下方「进阶选项」卡的间距。
+ *
+ * v0.9 初版设 margin-bottom: 0 让两卡完全贴合，想强化「边调边看」，
+ * 实测反而显得拥挤、缺呼吸感。现改为 16rpx ——
+ * 明显小于其它卡之间的 24rpx，仍能表达「这两块是一组」的关联，
+ * 但各自有独立卡片的完整形态。
+ */
+.live-preview {
+  padding-bottom: 24rpx;
+  margin-bottom: 16rpx;
+}
+
+/*
+ * 紧跟预览之后的进阶卡：上内边距略收，
+ * 让它在保持视觉分组的同时不至于「顶上来」。
+ */
+.live-preview + .card {
+  padding-top: 22rpx;
+}
+
+.lp-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 320rpx;
+  padding: 20rpx;
+  border-radius: 16rpx;
+  background: #f3f4f6;
+  overflow: hidden;
+}
+/* 同 .canvas-stage：无 padding 的可用区基准，供 createSelectorQuery 实测 */
+.lp-stage-inner {
+  width: 100%;
+  flex-shrink: 0;
+  /* 自身作为 flex 容器把 canvas 居中；width:100% 是实测基准，不可改（详见 result.wxss） */
+  display: flex;
+  justify-content: center;
+}
+
+/* ⚠️ flex-shrink: 0，理由同 .board-canvas：禁止画布被 flex 压缩导致变形 */
+.lp-canvas {
+  display: block;
+  flex-shrink: 0;
+  border-radius: 8rpx;
+  box-shadow: 0 2rpx 12rpx rgba(20, 24, 40, 0.1);
+}
+.lp-mask {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  color: var(--c-text-3);
+  background: #f3f4f6;
+}
+
+/*
+ * 预览指标条：颜色数 / 实心占比 / 格点阵。
+ * 这三个值随参数实时变化，是判断「参数是否真的生效」的最可靠信号 ——
+ * 缩略图上的细微色差肉眼常常看不出来，数字不会骗人。
+ * 注意 flex:1 必须配 min-width:0，否则长内容会撑破容器。
+ */
+.lp-stats {
+  display: flex;
+  margin-top: 20rpx;
+  padding: 18rpx 0;
+  background: #fafbfc;
+  border-radius: var(--radius-sm);
+}
+.lp-stat {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+}
+.lp-stat-val {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--c-brand);
+  line-height: 1.3;
+}
+.lp-stat-label {
+  display: block;
+  margin-top: 4rpx;
+  font-size: 21rpx;
+  color: var(--c-text-3);
+}
+
+/* ============ 模式选择 ============ */
+.mode-row {
+  display: flex;
+  gap: 20rpx;
+}
+.mode {
+  flex: 1;
+  padding: 24rpx 20rpx;
+  border-radius: 16rpx;
+  background: #f6f7f9;
+  border: 3rpx solid transparent;
+  transition: all 0.15s;
+}
+.mode-active {
+  background: var(--c-brand-soft);
+  border-color: var(--c-brand);
+}
+.mode-icon {
+  display: block;
+  font-size: 40rpx;
+  margin-bottom: 12rpx;
+}
+.mode-name {
+  display: block;
+  font-size: 27rpx;
+  font-weight: 600;
+  margin-bottom: 10rpx;
+}
+.mode-active .mode-name {
+  color: var(--c-brand);
+}
+.mode-desc {
+  display: block;
+  font-size: 21rpx;
+  color: var(--c-text-3);
+  line-height: 1.55;
+}
+
+/* ============ 滑块 ============ */
+.slider {
+  margin: 10rpx 8rpx 0;
+}
+.slider-sm {
+  width: 280rpx;
+  margin: 0;
+}
+
+/* ============ 提示 ============ */
+.hint {
+  margin-top: 18rpx;
+  font-size: 22rpx;
+  color: var(--c-text-3);
+  line-height: 1.6;
+}
+.field-hint {
+  display: block;
+  font-size: 21rpx;
+  color: var(--c-text-3);
+  margin-top: 4rpx;
+}
+.field {
+  align-items: center;
+}
+.field > view:first-child {
+  flex: 1;
+  min-width: 0;
+  padding-right: 20rpx;
+}
+
+.warn-box {
+  margin-top: 20rpx;
+  padding: 18rpx 20rpx;
+  background: #fff5e8;
+  border-radius: var(--radius-sm);
+  font-size: 22rpx;
+  color: #b26a00;
+  line-height: 1.65;
+}

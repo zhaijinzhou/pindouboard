@@ -1,0 +1,4 @@
+{
+  "colorLevel": 9,
+  "desc": "色库版本号，见 miniprogram/utils/config.js PALETTE_VERSION"
+}

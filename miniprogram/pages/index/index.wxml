@@ -1,0 +1,145 @@
+<!-- components/index/index.wxml -->
+<view class="page">
+
+  <!-- ============ 隐私提示（S-01） ============ -->
+  <view class="privacy-note" wx:if="{{!hasImage}}">
+    <text class="lock">🔒</text>
+    <text class="note-text">图片处理全部在本机完成，不会上传到任何服务器。你的照片只存在这台设备上。</text>
+  </view>
+
+  <!-- ============ 空态：选图 ============ -->
+  <block wx:if="{{!hasImage}}">
+    <view class="hero">
+      <view class="hero-icon">🎨</view>
+      <view class="hero-title">照片变拼豆图纸</view>
+      <view class="hero-sub">选一张图，自动匹配豆子色号，导出可打印的图纸与用量清单</view>
+    </view>
+
+    <view class="card">
+      <view class="pick-btn" bindtap="onPickAlbum">
+        <text class="pick-icon">🖼</text>
+        <text class="pick-text">从相册选择</text>
+      </view>
+      <view class="pick-btn" bindtap="onPickCamera">
+        <text class="pick-icon">📷</text>
+        <text class="pick-text">拍一张</text>
+      </view>
+    </view>
+
+    <!-- 使用说明 -->
+    <view class="card">
+      <view class="card-title">
+        <text>怎么用</text>
+      </view>
+      <view class="step">
+        <text class="step-num">1</text>
+        <text class="step-text">选图后可拖动取景框，指定用哪一部分画面出图</text>
+      </view>
+      <view class="step">
+        <text class="step-num">2</text>
+        <text class="step-text">调整格数、算法与豆子规格，实时预览图纸</text>
+      </view>
+      <view class="step">
+        <text class="step-num">3</text>
+        <text class="step-text">自动匹配 MARD 色号，可手动修图</text>
+      </view>
+      <view class="step">
+        <text class="step-num">4</text>
+        <text class="step-text">导出高清图纸与用量清单，按图施工</text>
+      </view>
+    </view>
+
+    <!-- 色库信息 -->
+    <view class="card">
+      <view class="card-title">
+        <text>色库</text>
+        <text class="sub">v{{paletteVersion}}</text>
+      </view>
+      <view class="row-between">
+        <text class="t-sm t-dim2">MARD 基础色库</text>
+        <text class="t-sm">{{paletteCount}} 色 · 覆盖 5mm / 2.6mm</text>
+      </view>
+      <view class="privacy-note" style="margin-top:20rpx">
+        <text class="lock">🎨</text>
+        <text class="note-text">色值为实物豆实测均值。屏幕显示与实物存在色差，请以实物色卡为准。</text>
+      </view>
+    </view>
+  </block>
+
+  <!-- ============ 图片预检（内嵌取景框，不额外占流程步骤） ============ -->
+  <block wx:else>
+    <view class="card preview-card">
+      <!-- 取景框直接放在预检卡片里：拖动即调整出图范围，无需单独一步确认 -->
+      <crop-frame id="cropper"
+        src="{{imagePath}}"
+        src-width="{{sourceWidth}}"
+        src-height="{{sourceHeight}}"
+        ratio="{{cropRatio}}"
+        bind:change="onCropChange" />
+
+      <!-- 成品规格：按拼豆板实际板型，而非摄影构图比例 -->
+      <view class="card-title" style="margin-top:24rpx;margin-bottom:12rpx">
+        <text class="t-sm">成品规格</text>
+        <text class="t-xs t-dim">按几块拼豆板拼</text>
+      </view>
+      <view class="chips">
+        <view wx:for="{{ratioOptions}}" wx:key="index" wx:for-index="oi"
+          class="chip {{cropPreset === oi ? 'chip-active' : ''}}"
+          bindtap="onRatioChange" data-index="{{oi}}">
+          {{item.label}}
+        </view>
+      </view>
+      <view class="t-xs t-dim" style="margin-top:14rpx;line-height:1.6">
+        {{ratioOptions[cropPreset].hint}}。比例相同的规格成品尺寸不同，按实际板子选；「自由比例」可任意裁剪。
+      </view>
+
+      <view class="row-between" style="margin-top:20rpx">
+        <text class="t-sm t-dim2">原图 {{sourceWidth}} × {{sourceHeight}}</text>
+        <text class="t-sm" bindtap="onPickAlbum">换一张</text>
+      </view>
+      <view class="row-between" style="margin-top:8rpx" wx:if="{{originWidth}}">
+        <text class="t-sm t-dim2">出图取景 {{originWidth}} × {{originHeight}}</text>
+        <text class="t-xs t-dim" wx:if="{{compressed}}">已压缩 {{processWidth}}×{{processHeight}}</text>
+      </view>
+    </view>
+
+    <!-- 预检结论（噪点风险） -->
+    <view class="card" wx:if="{{risk.level}}">
+      <view class="card-title">
+        <text>图片预检</text>
+        <text class="tag tag-{{riskTagClass}}">{{riskText}}</text>
+      </view>
+      <view class="t-sm t-dim2" style="line-height:1.7">{{risk.message}}</view>
+      <view class="divider"></view>
+      <view class="row-between">
+        <text class="t-sm t-dim2">每格对应像素</text>
+        <text class="t-sm t-bold">{{risk.pixelsPerCell}}</text>
+      </view>
+    </view>
+
+    <!-- 上次参数 -->
+    <view class="card" wx:if="{{hasHistory}}">
+      <view class="card-title"><text>上次的设置</text></view>
+      <view class="chips">
+        <view class="chip">{{params.boardCount}} 格</view>
+        <view class="chip">{{params.beadSize}}</view>
+        <view class="chip">{{modeText}}</view>
+      </view>
+    </view>
+  </block>
+
+  <!-- ============ 隐藏像素读取通道（S-02 降级路径） ============ -->
+  <canvas type="2d" id="hiddenPixelCanvas"
+    style="position:fixed;left:-9999px;top:0;width:1px;height:1px;" />
+
+  <!-- ============ 底部操作 ============ -->
+  <view class="footer" wx:if="{{hasImage}}">
+    <view class="btn btn-ghost" style="flex:1" bindtap="onReset">重选</view>
+    <view class="btn btn-primary" style="flex:2" bindtap="onNext">下一步 · 配置</view>
+  </view>
+  <view class="footer-space" wx:if="{{hasImage}}"></view>
+
+  <view class="entry-row" wx:if="{{!hasImage}}">
+    <text class="entry-link" bindtap="goCabinet">🗄 我的豆柜</text>
+  </view>
+</view>

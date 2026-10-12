@@ -1,0 +1,242 @@
+/* pages/editor/editor.wxss */
+
+/* ============ 体检总览 ============ */
+.health {
+  border-left: 8rpx solid var(--c-line);
+}
+.health-pass { border-left-color: var(--c-success); }
+.health-warn { border-left-color: var(--c-warn); }
+.health-danger { border-left-color: var(--c-danger); }
+
+.health-dot {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  margin-right: 14rpx;
+}
+.health-pass { background: var(--c-success); }
+.health-warn { background: var(--c-warn); }
+.health-danger { background: var(--c-danger); }
+
+/* ============ 画布 ============ */
+/*
+ * 「长按放大」提示：复用全局 .t-xs + .t-dim，与页面其它辅助说明一致。
+ */
+.magnifier-hint {
+  margin-top: 12rpx;
+  line-height: 1.6;
+}
+
+.canvas-wrap {
+  width: 100%;
+  overflow: auto;
+  background: #f6f7f9;
+  border-radius: 12rpx;
+  padding: 20rpx;
+  display: flex;
+  justify-content: center;
+}
+/* 画布内层：无 padding 的可用区基准，供 createSelectorQuery 实测（详见 result.wxss 同名规则） */
+.canvas-stage {
+  width: 100%;
+  flex-shrink: 0;
+  /* 自身作为 flex 容器把 canvas 居中；width:100% 是实测基准，不可改（详见 result.wxss） */
+  display: flex;
+  justify-content: center;
+  /*
+   * 放大镜触摸层用 position:absolute 覆盖在画布上，
+   * 需要本元素作为定位参照，否则会跑到页面左上角。
+   */
+  position: relative;
+}
+/* magnifier 组件本体不占布局，否则会把 canvas 挤到下一行 */
+.canvas-stage .mg-host {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+}
+/* ⚠️ flex-shrink: 0 是「图纸被横向压扁」bug 的直接止血点，详见 result.wxss 同名规则 */
+.board-canvas {
+  flex-shrink: 0;
+  border-radius: 8rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.08);
+}
+
+/* 点击覆盖层：透明，负责接收触摸事件 */
+/* ============ 加载进度 ============ */
+.progress-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+.progress-dot {
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 50%;
+  background: #f0f1f3;
+  color: #fff;
+  font-size: 20rpx;
+  text-align: center;
+  line-height: 36rpx;
+  margin-right: 18rpx;
+}
+.progress-dot.done {
+  background: var(--c-success);
+}
+.progress-label {
+  font-size: 26rpx;
+  color: var(--c-text-3);
+}
+.progress-label.done {
+  color: var(--c-text-2);
+}
+
+/* ============ 体检明细 ============ */
+.check-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 20rpx 0;
+  border-bottom: 2rpx solid var(--c-line);
+}
+.check-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.check-icon {
+  flex-shrink: 0;
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 22rpx;
+  text-align: center;
+  line-height: 36rpx;
+  margin-right: 18rpx;
+  margin-top: 2rpx;
+}
+.check-pass { background: var(--c-success); }
+.check-warn { background: var(--c-warn); }
+.check-danger { background: var(--c-danger); }
+
+.check-title {
+  display: block;
+  font-size: 26rpx;
+  font-weight: 600;
+  margin-bottom: 6rpx;
+}
+.check-detail {
+  display: block;
+  font-size: 22rpx;
+  color: var(--c-text-3);
+  line-height: 1.6;
+}
+.check-advice {
+  display: block;
+  font-size: 22rpx;
+  color: var(--c-brand);
+  line-height: 1.6;
+  margin-top: 8rpx;
+}
+
+/* ============ 颜色选择 ============ */
+.color-chip {
+  /* 父级 .chip 已是 flex 居中，这里只需给色点留出间距。
+     不要再写 display:flex —— 曾经这么写是为了兼容 <text> 包裹，
+     现已改为 <view> 承载（小程序 text 组件内不允许嵌 view）。 */
+  padding-left: 16rpx;
+}
+.color-dot {
+  width: 24rpx;
+  height: 24rpx;
+  border-radius: 50%;
+  margin-right: 10rpx;
+  border: 1rpx solid rgba(0, 0, 0, 0.12);
+}
+.color-code {
+  font-size: 24rpx;
+}
+
+/* ============ 颜色清单 ============ */
+/*
+ * 列表按内容自然撑开，不用固定高度 + 内部滚动。
+ * 理由：颜色数通常 5~20 条，内部滚动容器会让「还剩多少色」变得不可见，
+ * 用户需要额外滚动才发现清单没到底 —— 在页面滚动已是主交互的前提下
+ * 嵌套滚动是反模式。
+ */
+.color-list {
+  width: 100%;
+}
+.color-row {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 0;
+  border-bottom: 2rpx solid var(--c-line);
+}
+.color-row:last-child {
+  border-bottom: none;
+}
+.color-swatch {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 8rpx;
+  margin-right: 18rpx;
+  border: 1rpx solid rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+.color-code-text {
+  font-size: 24rpx;
+  font-weight: 600;
+  width: 72rpx;
+  flex-shrink: 0;
+}
+.color-name {
+  flex: 1;
+  /* 色名长度不可控（用户自建豆柜时自由输入），必须允许收缩换行 */
+  min-width: 0;
+  font-size: 24rpx;
+  color: var(--c-text-2);
+  word-break: break-all;
+}
+.color-count {
+  font-size: 24rpx;
+  color: var(--c-text-3);
+}
+/* ============ 成品指标（v0.7 由配置页移入） ============ */
+/*
+ * 放在图纸预览卡片内、画布正上方：尺寸与格数只有对照真实图纸才有意义。
+ * 样式与配置页原有的 .summary 保持一致（该类已从 config.wxss 移除）。
+ */
+.summary {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20rpx;
+  padding: 22rpx 12rpx;
+  background: #fafbfc;
+  border-radius: var(--radius-sm);
+}
+.summary-item {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+}
+.summary-val {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--c-brand);
+  line-height: 1.3;
+}
+.summary-label {
+  display: block;
+  margin-top: 4rpx;
+  font-size: 21rpx;
+  color: var(--c-text-3);
+}
+.summary-divider {
+  width: 2rpx;
+  height: 48rpx;
+  background: var(--c-line);
+  flex-shrink: 0;
+}
